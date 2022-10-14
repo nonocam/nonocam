@@ -143,17 +143,12 @@ class Home extends Component {
     let fps = 0;
     let frameNb = 0;
     navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-
       const [width, height] = t.getStreamResolution(stream);
 
       cocoSsd.load().then((loadedModel: any) => {
         if(t.videoRef.current === null) {
           throw "videoRef should never be null!"
         }
-
-        t.model = loadedModel;
-        t.setState({isLoading: false});
-        t.videoRef.current.srcObject = stream;
 
         function predict() {
           t.model.detect(t.videoRef.current).then((predictions:any[]) => {
@@ -178,42 +173,39 @@ class Home extends Component {
             })});
 
             // Increase Counter
-            if(true) {
-              // const countedClasses = ['person', 'bicycle', 'car', 'truck'];
-              // const filteredObjects = trackedObjects.filter((trackedObject:any) => {
-              //   return countedClasses.findIndex((x) => x === trackedObject.name) >= 0;
-              // });
-              const sortedObjects = (trackedObjects as any[]).sort((x, y) => x.id - y.id);
-              sortedObjects.forEach((o:any) => {
-                if(o.name === 'person' && o.id > (t.state as any).lastIdPerson) {
-                  t.setState({
-                    lastIdPerson: o.id,
-                    counterPerson: (t.state as any).counterPerson + 1,
-                  });
-                } else if(o.name === 'bicycle' && o.id > (t.state as any).lastIdBicycle) {
-                  t.setState({
-                    lastIdBicycle: o.id,
-                    counterBicycle: (t.state as any).counterBicycle + 1,
-                  });
-                } else if(o.name === 'car' && o.id > (t.state as any).lastIdCar) {
-                  t.setState({
-                    lastIdCar: o.id,
-                    counterCar: (t.state as any).counterCar + 1,
-                  });
-                } else if(o.name === 'truck' && o.id > (t.state as any).lastIdTruck) {
-                  t.setState({
-                    lastIdTruck: o.id,
-                    counterTruck: (t.state as any).counterTruck + 1,
-                  });
-                }
-              });
-            }
+            const sortedObjects = (trackedObjects as any[]).sort((x, y) => x.id - y.id);
+            sortedObjects.forEach((o:any) => {
+              if(o.name === 'person' && o.id > (t.state as any).lastIdPerson) {
+                t.setState({
+                  lastIdPerson: o.id,
+                  counterPerson: (t.state as any).counterPerson + 1,
+                });
+              } else if(o.name === 'bicycle' && o.id > (t.state as any).lastIdBicycle) {
+                t.setState({
+                  lastIdBicycle: o.id,
+                  counterBicycle: (t.state as any).counterBicycle + 1,
+                });
+              } else if(o.name === 'car' && o.id > (t.state as any).lastIdCar) {
+                t.setState({
+                  lastIdCar: o.id,
+                  counterCar: (t.state as any).counterCar + 1,
+                });
+              } else if(o.name === 'truck' && o.id > (t.state as any).lastIdTruck) {
+                t.setState({
+                  lastIdTruck: o.id,
+                  counterTruck: (t.state as any).counterTruck + 1,
+                });
+              }
+            });
 
             // Signal the browser that we are ready to receive a new frame
             window.requestAnimationFrame(predict);
           });
         }
 
+        t.model = loadedModel;
+        t.setState({isLoading: false});
+        t.videoRef.current.srcObject = stream;
         t.videoRef.current.addEventListener('loadeddata', () => {
           predict();
         });
