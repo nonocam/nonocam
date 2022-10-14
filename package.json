@@ -9,9 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@tensorflow-models/coco-ssd": "^2.2.2",
-    "@tensorflow/tfjs-core": "^4.0.0",
     "next": "12.3.1",
+    "node-moving-things-tracker": "0.9.1",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
