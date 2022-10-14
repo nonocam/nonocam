@@ -62,7 +62,15 @@ class Home extends Component {
     this.state = {
       isLoading: true,
       fps: 0,
-      boundingBoxes: []
+      boundingBoxes: [],
+      counterPerson: 0,
+      counterBicycle: 0,
+      counterCar: 0,
+      counterTruck: 0,
+      lastIdPerson: -1,
+      lastIdBicycle: -1,
+      lastIdCar: -1,
+      lastIdTruck: -1,
     }
   }
 
@@ -163,20 +171,43 @@ class Home extends Component {
                 throw "videoRef should never be null!"
               }
 
-              console.log({
-                clientHeight: t.videoRef.current.clientHeight,
-                clientWidth: t.videoRef.current.clientWidth,
-                width: t.videoRef.current.width,
-                height: t.videoRef.current.height,
-                videoHeight: t.videoRef.current.videoHeight,
-                videoWidth: t.videoRef.current.videoWidth,
-              });
-
               return <BoundingBox
                 key = {trackedObject.id}
                 trackedObject = {trackedObject}
                 videoRef = {t.videoRef.current} />
             })});
+
+            // Increase Counter
+            if(true) {
+              // const countedClasses = ['person', 'bicycle', 'car', 'truck'];
+              // const filteredObjects = trackedObjects.filter((trackedObject:any) => {
+              //   return countedClasses.findIndex((x) => x === trackedObject.name) >= 0;
+              // });
+              const sortedObjects = (trackedObjects as any[]).sort((x, y) => x.id - y.id);
+              sortedObjects.forEach((o:any) => {
+                if(o.name === 'person' && o.id > (t.state as any).lastIdPerson) {
+                  t.setState({
+                    lastIdPerson: o.id,
+                    counterPerson: (t.state as any).counterPerson + 1,
+                  });
+                } else if(o.name === 'bicycle' && o.id > (t.state as any).lastIdBicycle) {
+                  t.setState({
+                    lastIdBicycle: o.id,
+                    counterBicycle: (t.state as any).counterBicycle + 1,
+                  });
+                } else if(o.name === 'car' && o.id > (t.state as any).lastIdCar) {
+                  t.setState({
+                    lastIdCar: o.id,
+                    counterCar: (t.state as any).counterCar + 1,
+                  });
+                } else if(o.name === 'truck' && o.id > (t.state as any).lastIdTruck) {
+                  t.setState({
+                    lastIdTruck: o.id,
+                    counterTruck: (t.state as any).counterTruck + 1,
+                  });
+                }
+              });
+            }
 
             // Signal the browser that we are ready to receive a new frame
             window.requestAnimationFrame(predict);
@@ -205,7 +236,11 @@ class Home extends Component {
           <video className={styles.webcam} autoPlay playsInline ref={this.videoRef} />
           {(this.state as any).boundingBoxes}
           <p className={styles.footer}>
-            {(this.state as any).fps} fps
+            <span>🚶 {(this.state as any).counterPerson}</span>
+            <span>🚴 {(this.state as any).counterBicycle}</span>
+            <span>🚗 {(this.state as any).counterCar}</span>
+            <span>🚚 {(this.state as any).counterTruck}</span>
+            <span>{(this.state as any).fps} fps</span>
           </p>
         </main>
 

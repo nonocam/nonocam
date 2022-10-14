@@ -33,6 +33,14 @@
   flex-grow: 1;
 }
 
+.footer span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+  width: 10rem;
+}
+
 .title a {
   color: #0070f3;
   text-decoration: none;
