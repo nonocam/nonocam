@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export:github-pages": "APP_ENV=github-pages npm run build && APP_ENV=github-pages next export -o docs && touch ./docs/.nojekyll"
   },
   "dependencies": {
     "next": "12.3.1",

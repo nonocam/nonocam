@@ -4,4 +4,8 @@ const nextConfig = {
   swcMinify: true,
 }
 
+if(process.env.APP_ENV === 'github-pages') {
+  nextConfig.basePath = '/nonocam';
+}
+
 module.exports = nextConfig
