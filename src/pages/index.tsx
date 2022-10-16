@@ -135,6 +135,7 @@ class Home extends Component {
     const constraints = {
       video: {
           facingMode: "environment",
+          frameRate: 24,
       }
     };
 
