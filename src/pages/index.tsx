@@ -1,25 +1,60 @@
-import type { NextPage } from 'next'
 import Head from 'next/head'
-import Image from 'next/image'
-import { Component, createRef, RefObject, useRef, useState } from 'react'
+import { Component, createRef, RefObject } from 'react'
 import styles from '../../styles/Home.module.css'
 import Script from 'next/script'
 import { updateTrackedItemsWithNewFrame, getJSONOfTrackedItems, Detection } from 'node-moving-things-tracker/tracker'
+import AskLandscape from '../components/AskLandscape'
 
 declare let cocoSsd: any;
 
+const constraints = {
+  video: {
+      facingMode: "environment",
+      frameRate: 24,
+      width: 640,
+      height: 360,
+  }
+};
+
+let x:any = null;
+
 function BoundingBox(props:any) {
   function videoDimensions(video: HTMLVideoElement) {
+    const videoHeight = video.videoHeight;
+    const videoWidth = video.videoWidth;
+
     // Ratio of the video's intrisic dimensions
-    var videoRatio = video.videoWidth / video.videoHeight;
+    var videoRatio = videoWidth / videoHeight;
     // The width and height of the video element
     var width = video.offsetWidth, height = video.offsetHeight;
     // The ratio of the element's width to its height
     var elementRatio = width/height;
-    // If the video element is short and wide
-    if(elementRatio > videoRatio) width = height * videoRatio;
-    // It must be tall and thin, or exactly equal to the original ratio
-    else height = width / videoRatio;
+    if(elementRatio > videoRatio) {
+      // If the video element is short and wide
+      width = height * videoRatio;
+    } else {
+      // It must be tall and thin, or exactly equal to the original ratio
+      height = width / videoRatio;
+    }
+
+    // const y = {
+    //   videoHeight: videoHeight,
+    //   videoWidth: videoWidth,
+    //   offsetHeight: video.offsetHeight,
+    //   offsetWidth: video.offsetWidth,
+    //   clientHeigh: video.clientHeight,
+    //   clientWidth: video.clientWidth,
+    //   height,
+    //   width,
+    //   topOffset: (videoRef.clientHeight - height) / 2,
+    //   leftOffset: (videoRef.clientWidth - width) / 2,
+    //   resolution: getStreamResolution(video.srcObject as MediaStream),
+    // }
+    // if(JSON.stringify(x) !== JSON.stringify(y)) {
+    //   x = y;
+    //   console.table(x);
+    // }
+
     return {
       width: width,
       height: height
@@ -48,8 +83,27 @@ function BoundingBox(props:any) {
     width: trackedObject.w * actualSize.width,
   }
   return <div className={styles.boundingBox} style={s}>
-    {trackedObject.name} #{trackedObject.id} {trackedObject.confidence}%
+    {trackedObject.name} #{trackedObject.id} {Math.round(trackedObject.confidence * 100)}%
   </div>;
+}
+
+/**
+ * Determine the width & height of a video stream
+ *
+ * @param stream The stream
+ * @returns Array of format [width, height]. If resolution can not be determined will return [0,0]
+ */
+function getStreamResolution(stream: MediaStream): [number, number] {
+  if(stream.getVideoTracks().length == 0) {
+    return [0, 0];
+  }
+
+  const width = stream.getVideoTracks()[0].getSettings().width;
+  const height = stream.getVideoTracks()[0].getSettings().height;
+  if(width !== undefined && height !== undefined) {
+    return [width, height];
+  }
+  return [0 ,0];
 }
 
 class Home extends Component {
@@ -112,39 +166,13 @@ class Home extends Component {
     };
   }
 
-  /**
-   * Determine the width & height of a video stream
-   *
-   * @param stream The stream
-   * @returns Array of format [width, height]. If resolution can not be determined will return [0,0]
-   */
-  private getStreamResolution(stream: MediaStream): [number, number] {
-    if(stream.getVideoTracks().length == 0) {
-      return [0, 0];
-    }
-
-    const width = stream.getVideoTracks()[0].getSettings().width;
-    const height = stream.getVideoTracks()[0].getSettings().height;
-    if(width !== undefined && height !== undefined) {
-      return [width, height];
-    }
-    return [0 ,0];
-  }
-
   componentDidMount() {
-    const constraints = {
-      video: {
-          facingMode: "environment",
-          frameRate: 24,
-      }
-    };
-
     // Activate the webcam stream.
     const t = this;
     let fps = 0;
     let frameNb = 0;
     navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-      const [width, height] = t.getStreamResolution(stream);
+      const [width, height] = getStreamResolution(stream);
 
       cocoSsd.load().then((loadedModel: any) => {
         if(t.videoRef.current === null) {
@@ -211,10 +239,17 @@ class Home extends Component {
           predict();
         });
       });
+    }, (err) => {
+      console.log(err);
     });
 
     // Update FPS counter
     setInterval(() => { this.setState({fps: fps}); fps = 0; }, 1000);
+
+    this.setState({isPortrait: window.innerHeight > window.innerWidth});
+    window.addEventListener('resize', () => {
+      this.setState({isPortrait: window.innerHeight > window.innerWidth});
+    });
   }
 
   render() {
@@ -225,16 +260,23 @@ class Home extends Component {
         </Head>
 
         <main className={styles.main}>
-          { (this.state as any).isLoading && <p>nonocam loading…</p> }
+          { (this.state as any).isPortrait && <AskLandscape /> }
+          {
+            (this.state as any).isLoading &&
+            <p style={{position: 'fixed', top: '50%', left: '0', width: '100%', textAlign: 'center'}}>nonocam loading…</p>
+          }
           <video className={styles.webcam} autoPlay playsInline ref={this.videoRef} />
           {(this.state as any).boundingBoxes}
-          <p className={styles.footer}>
-            <span>🚶 {(this.state as any).counterPerson}</span>
-            <span>🚴 {(this.state as any).counterBicycle}</span>
-            <span>🚗 {(this.state as any).counterCar}</span>
-            <span>🚚 {(this.state as any).counterTruck}</span>
-            <span>{(this.state as any).fps} fps</span>
-          </p>
+          {
+            !(this.state as any).isLoading &&
+            <p className={styles.footer}>
+              <span>🚶 {(this.state as any).counterPerson}</span>
+              <span>🚴 {(this.state as any).counterBicycle}</span>
+              <span>🚗 {(this.state as any).counterCar}</span>
+              <span>🚚 {(this.state as any).counterTruck}</span>
+              <span>{(this.state as any).fps} fps</span>
+            </p>
+          }
         </main>
 
         <Script
