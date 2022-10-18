@@ -260,10 +260,13 @@ class Home extends Component {
         </Head>
 
         <main className={styles.main}>
-          { (this.state as any).isPortrait && <AskLandscape /> }
           {
             (this.state as any).isLoading &&
             <p style={{position: 'fixed', top: '50%', left: '0', width: '100%', textAlign: 'center'}}>nonocam loading…</p>
+          }
+          {
+            (!(this.state as any).isLoading && (this.state as any).isPortrait) &&
+            <AskLandscape />
           }
           <video className={styles.webcam} autoPlay playsInline ref={this.videoRef} />
           {(this.state as any).boundingBoxes}
